@@ -1,101 +1,76 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import { useState } from "react";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+export default function page(props) {
+    const [long, setLong] = useState();
+    const [code, setCode] = useState();
+    const [loading, setLoading] = useState({ "state": false, "message": "Create short link" });
+
+    // Handles create button pressed event
+    const create = async () => {
+        // Set button loading state
+        setLoading({ "state": true, "message": "Creating your link" });
+
+        // Call backend to create the shortlink
+        const response = await fetch("api/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ long, code }),
+        });
+
+        // Update creation status via button
+        if (response.status === 409) setLoading({ "state": true, "message": "Short code exists ⚠️" });
+        else if (response.status === 400) setLoading({ "state": true, "message": "Invalid inputs given ⚠️" });
+        else setLoading({ "state": true, "message": "Link created successfully ✅" });
+
+        // After 3 second reset the button loading state
+        setTimeout(() => setLoading({ "state": false, "message": "Create short link" }), 3000);
+    }
+
+    return (
+        <div className="flex justify-center h-[100svh] items-center flex-col text-center px-4">
+            {/* Top title */}
+            <div className="text-6xl font-bold mt-[-3rem]">Clix🔗</div>
+
+            {/* Form for creating shortlinks */}
+            <div className="mt-6">
+                {/* Long link input box */}
+                <input
+                    type="text"
+                    placeholder="Enter link to shorten"
+                    onChange={(e) => setLong(e.target.value)}
+                    className="w-full px-4 py-2 dark:text-white placeholder-gray-400 dark:bg-gray-800 border-2 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+
+                {/* Short link code input box and copy button*/}
+                <div className="flex items-center gap-2 mt-3">
+                    <div className="whitespace-nowrap">clix.rd64.in</div>
+                    <span className="text-2xl">/</span>
+
+                    <input
+                        type="text"
+                        placeholder="Short code"
+                        onChange={(e) => setCode(e.target.value)}
+                        className="w-full px-4 py-2 dark:text-white placeholder-gray-400 dark:bg-gray-800 border-2 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+
+                    <button
+                        onClick={() => navigator.clipboard.writeText(`https://clix.rd64.in/${code}`)}
+                        className="px-4 py-2 text-white bg-blue-600 border-blue-500 border-2 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-blue-700 hover:border-blue-600 hover:scale-95">
+                        Copy
+                    </button>
+                </div>
+
+                {/* Button to create the shortlink */}
+                <button
+                    onClick={create}
+                    className={"w-full mt-3 px-6 py-3 text-white bg-blue-600 border-blue-500 border-2 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-blue-700 hover:border-blue-600 hover:scale-95 " + (loading.state ? "cursor-not-allowed opacity-50" : "")} >
+                    {loading.message}
+                </button>
+            </div >
+        </div >
+    );
 }
